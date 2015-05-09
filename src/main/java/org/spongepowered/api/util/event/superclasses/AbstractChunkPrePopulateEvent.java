@@ -22,34 +22,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.api.event.entity.player;
+package org.spongepowered.api.util.event.superclasses;
 
-import org.spongepowered.api.world.Location;
+import org.spongepowered.api.event.AbstractEvent;
+import org.spongepowered.api.event.world.ChunkPrePopulateEvent;
+import org.spongepowered.api.world.gen.Populator;
 
-/**
- * Called when a player respawns after death.
- */
-public interface PlayerRespawnEvent extends PlayerEvent {
+import java.util.ArrayList;
+import java.util.List;
 
-    /**
-     * Gets the respawn location of the player.
-     *
-     * @return The respawn location of the player
-     */
-    Location getRespawnLocation();
+public abstract class AbstractChunkPrePopulateEvent extends AbstractEvent implements ChunkPrePopulateEvent {
 
-    /**
-     * Gets whether the respawn location was set by a bed or not.
-     *
-     * @return Whether the respawn location was set by a bed
-     */
-    boolean isBedSpawn();
+    private List<Populator> pendingPopulators = new ArrayList<Populator>();
 
-    /**
-     * Sets the new player respawn location permanently.
-     *
-     * @param respawnLocation The new respawn location
-     */
-    void setRespawnLocation(Location respawnLocation);
+    @Override
+    public Iterable<Populator> getPendingPopulators() {
+        return this.pendingPopulators;
+    }
+
+    @Override
+    public void insertPopulator(Populator populator, int index) {
+        if (index >= this.pendingPopulators.size()) {
+            this.pendingPopulators.add(populator);
+        } else {
+            this.pendingPopulators.add(index, populator);
+        }
+    }
 
 }

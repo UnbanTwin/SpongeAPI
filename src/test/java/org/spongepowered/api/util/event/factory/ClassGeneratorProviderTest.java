@@ -30,14 +30,18 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.closeTo;
 import static org.junit.Assert.assertThat;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import org.hamcrest.Matchers;
 import org.junit.Test;
+import org.spongepowered.api.scoreboard.objective.Objective;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 public class ClassGeneratorProviderTest {
 
@@ -311,6 +315,29 @@ public class ClassGeneratorProviderTest {
         ClassGeneratorProvider provider = createProvider();
         EventFactory<AbstractImplContainer> factory = provider.create(AbstractImplContainer.class, AbstractImpl.class);
         factory.apply(values);
+    }
+
+    @Test
+    public void testCreate_OptionalGetter() {
+        Map<String, Object> values = Maps.newHashMap();
+        values.put("name", Optional.fromNullable("MyName"));
+
+        ClassGeneratorProvider provider = createProvider();
+        EventFactory<OptionalGetter> factory = provider.create(OptionalGetter.class, Object.class);
+        OptionalGetter getter = factory.apply(values);
+
+        assertThat(getter.getName().isPresent(), is(true));
+        assertThat(getter.getName().get(), is(Matchers.equalTo("MyName")));
+
+        getter.setName(null);
+        assertThat(getter.getName().isPresent(), is(false));
+    }
+
+    public interface OptionalGetter {
+
+        Optional<String> getName();
+
+        void setName(@Nullable String name);
     }
 
     public interface PrimitiveContainer {

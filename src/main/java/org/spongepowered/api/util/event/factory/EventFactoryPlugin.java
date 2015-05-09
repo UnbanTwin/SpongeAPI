@@ -22,34 +22,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.api.event.entity.player;
-
-import org.spongepowered.api.world.Location;
+package org.spongepowered.api.util.event.factory;
 
 /**
- * Called when a player respawns after death.
+ ** Represents a class which modifies the behavior of an event generator.
  */
-public interface PlayerRespawnEvent extends PlayerEvent {
+public interface EventFactoryPlugin {
 
     /**
-     * Gets the respawn location of the player.
+     * Gets the superclass to use for class generated for the specified
+     * event interface.
      *
-     * @return The respawn location of the player
-     */
-    Location getRespawnLocation();
-
-    /**
-     * Gets whether the respawn location was set by a bed or not.
+     * <p>All of the registered plugins have this method called in a chain, which each plugin receiving
+     * the return value of the previous plugin as the {@param superClass} parameter.
+     * The first plugin in the chain is passed <code>null</code> as its {@param superClass}.
      *
-     * @return Whether the respawn location was set by a bed
-     */
-    boolean isBedSpawn();
-
-    /**
-     * Sets the new player respawn location permanently.
+     * If a plugin is able to determine a superclass for an event interface, it should return it.
+     * Otherwise, it should return the value it received as {@param superClass}.
      *
-     * @param respawnLocation The new respawn location
+     *
+     *
+     * @param eventClass The interface to determine the superclass for
+     * @param superClass The current superclass of the event interface
+     * @return The class to use as the event interface's superclass
      */
-    void setRespawnLocation(Location respawnLocation);
+    Class<?> resolveSuperClassFor(Class<?> eventClass, Class<?> superClass);
 
 }

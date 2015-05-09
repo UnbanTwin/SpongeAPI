@@ -22,34 +22,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.api.event.entity.player;
+package org.spongepowered.api.util.event.superclasses;
 
+import com.google.common.base.Predicate;
+import org.spongepowered.api.event.AbstractEvent;
+import org.spongepowered.api.event.Cancellable;
+import org.spongepowered.api.event.block.BulkBlockEvent;
 import org.spongepowered.api.world.Location;
 
-/**
- * Called when a player respawns after death.
- */
-public interface PlayerRespawnEvent extends PlayerEvent {
+import java.util.Iterator;
 
-    /**
-     * Gets the respawn location of the player.
-     *
-     * @return The respawn location of the player
-     */
-    Location getRespawnLocation();
+public abstract class AbstractBulkBlockEvent extends AbstractEvent implements BulkBlockEvent {
 
-    /**
-     * Gets whether the respawn location was set by a bed or not.
-     *
-     * @return Whether the respawn location was set by a bed
-     */
-    boolean isBedSpawn();
-
-    /**
-     * Sets the new player respawn location permanently.
-     *
-     * @param respawnLocation The new respawn location
-     */
-    void setRespawnLocation(Location respawnLocation);
+    @Override
+    public void filter(Predicate<Location> predicate) {
+        if (this instanceof Cancellable) {
+            Iterator<Location> iterator = this.getBlocks().iterator();
+            while (iterator.hasNext()) {
+                if (!predicate.apply(iterator.next())) {
+                    iterator.remove();
+                }
+            }
+        }
+    }
 
 }

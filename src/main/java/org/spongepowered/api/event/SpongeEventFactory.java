@@ -140,8 +140,10 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.util.command.CommandResult;
 import org.spongepowered.api.util.command.CommandSource;
+import org.spongepowered.api.util.event.factory.AnnotationEventFactoryPlugin;
 import org.spongepowered.api.util.event.factory.ClassGeneratorProvider;
 import org.spongepowered.api.util.event.factory.EventFactory;
+import org.spongepowered.api.util.event.factory.EventFactoryPlugin;
 import org.spongepowered.api.util.event.factory.FactoryProvider;
 import org.spongepowered.api.util.event.factory.NullPolicy;
 import org.spongepowered.api.world.Chunk;
@@ -154,9 +156,12 @@ import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.api.world.weather.Weather;
 import org.spongepowered.api.world.weather.WeatherUniverse;
 
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 import javax.annotation.Nullable;
 
@@ -167,22 +172,45 @@ public final class SpongeEventFactory {
 
     private static final FactoryProvider factoryProvider;
     private static final LoadingCache<Class<?>, EventFactory<?>> factories;
+    private static final Deque<EventFactoryPlugin> plugins;
 
     static {
         factoryProvider = new ClassGeneratorProvider("org.spongepowered.api.event.impl");
         factoryProvider.setNullPolicy(NullPolicy.NON_NULL_BY_DEFAULT);
+
+        plugins = new ArrayDeque<EventFactoryPlugin>();
+        plugins.addFirst(new AnnotationEventFactoryPlugin());
 
         factories = CacheBuilder.newBuilder()
                 .build(
                         new CacheLoader<Class<?>, EventFactory<?>>() {
                             @Override
                             public EventFactory<?> load(Class<?> type) {
-                                return factoryProvider.create(type, AbstractEvent.class);
+                                return factoryProvider.create(type, getBaseClass(type));
                             }
                         });
     }
 
     private SpongeEventFactory() {
+    }
+
+    private static Class<?> getBaseClass(Class<?> event) {
+        Class<?> superClass = null;
+        for (EventFactoryPlugin plugin: plugins) {
+            superClass = plugin.resolveSuperClassFor(event, superClass);
+        }
+        return superClass;
+    }
+
+    /**
+     * Adds an {@link EventFactoryPlugin} to the chain of plugins.
+     *
+     * <p>The plugin chain is in LIFO order.</p>
+     *
+     * @param plugin The {@link EventFactoryPlugin} to add to the chain
+     */
+    public static void addEventFactoryPlugin(EventFactoryPlugin plugin) {
+        plugins.addFirst(plugin);
     }
 
     @SuppressWarnings("unchecked")
@@ -419,22 +447,6 @@ public final class SpongeEventFactory {
         values.put("block", block);
         values.put("replacementBlock", replacementBlock);
         return createEvent(FloraGrowEvent.class, values);
-    }
-
-    /**
-     * Creates a new {@link FluidSpreadEvent}.
-     *
-     * @param game The game instance for this {@link GameEvent}
-     * @param cause The cause of the event, can be null
-     * @param blocks The blocks affected by this event
-     * @return A new instance of the event
-     */
-    public static FluidSpreadEvent createFluidSpread(Game game, Cause cause, List<Location> blocks) {
-        Map<String, Object> values = Maps.newHashMap();
-        values.put("game", game);
-        values.put("cause", Optional.fromNullable(cause));
-        values.put("blocks", blocks);
-        return createEvent(FluidSpreadEvent.class, values);
     }
 
     /**

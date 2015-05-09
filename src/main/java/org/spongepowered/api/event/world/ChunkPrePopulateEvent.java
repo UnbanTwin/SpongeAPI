@@ -24,12 +24,15 @@
  */
 package org.spongepowered.api.event.world;
 
+import org.spongepowered.api.util.annotation.ImplementedBy;
+import org.spongepowered.api.util.event.superclasses.AbstractChunkPrePopulateEvent;
 import org.spongepowered.api.world.Chunk;
 import org.spongepowered.api.world.gen.Populator;
 
 /**
  * Called when a {@link Chunk} is about to be populated.
  */
+@ImplementedBy(AbstractChunkPrePopulateEvent.class)
 public interface ChunkPrePopulateEvent extends ChunkEvent {
 
     /**

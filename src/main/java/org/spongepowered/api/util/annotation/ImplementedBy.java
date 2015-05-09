@@ -22,34 +22,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.api.event.entity.player;
+package org.spongepowered.api.util.annotation;
 
-import org.spongepowered.api.world.Location;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Called when a player respawns after death.
+ * Used to indicate the base class that a generated event class extends from.
  */
-public interface PlayerRespawnEvent extends PlayerEvent {
+@Inherited
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ImplementedBy {
 
     /**
-     * Gets the respawn location of the player.
+     * Gets the class which serves as the base class which the generated class for this
+     * event interface will extend.
      *
-     * @return The respawn location of the player
+     * @return The base class to use
      */
-    Location getRespawnLocation();
-
-    /**
-     * Gets whether the respawn location was set by a bed or not.
-     *
-     * @return Whether the respawn location was set by a bed
-     */
-    boolean isBedSpawn();
-
-    /**
-     * Sets the new player respawn location permanently.
-     *
-     * @param respawnLocation The new respawn location
-     */
-    void setRespawnLocation(Location respawnLocation);
+    Class<?> value();
 
 }

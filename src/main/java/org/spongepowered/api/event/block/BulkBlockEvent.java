@@ -28,6 +28,8 @@ import com.google.common.base.Predicate;
 import org.spongepowered.api.event.Cancellable;
 import org.spongepowered.api.event.GameEvent;
 import org.spongepowered.api.event.cause.CauseTracked;
+import org.spongepowered.api.util.annotation.ImplementedBy;
+import org.spongepowered.api.util.event.superclasses.AbstractBulkBlockEvent;
 import org.spongepowered.api.world.Location;
 
 import java.util.List;
@@ -35,6 +37,7 @@ import java.util.List;
 /**
  * A base event for events affecting several blocks (as their target).
  */
+@ImplementedBy(AbstractBulkBlockEvent.class)
 public interface BulkBlockEvent extends GameEvent, CauseTracked {
 
     /**

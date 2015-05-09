@@ -47,6 +47,7 @@ import static org.objectweb.asm.Opcodes.IFNULL;
 import static org.objectweb.asm.Opcodes.ILOAD;
 import static org.objectweb.asm.Opcodes.INVOKEINTERFACE;
 import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 import static org.objectweb.asm.Opcodes.IRETURN;
 import static org.objectweb.asm.Opcodes.ISUB;
@@ -227,8 +228,10 @@ class ClassGenerator {
 
         // Create the fields
         for (Property property : properties) {
-            FieldVisitor fv = cw.visitField(ACC_PRIVATE, property.getName(), Type.getDescriptor(property.getType()), null, null);
-            fv.visitEnd();
+            if (property.isLeastSpecificType()) {
+                FieldVisitor fv = cw.visitField(ACC_PRIVATE, property.getName(), Type.getDescriptor(property.getType()), null, null);
+                fv.visitEnd();
+            }
         }
 
         // Create the constructor
@@ -242,7 +245,7 @@ class ClassGenerator {
             mv.visitMethodInsn(INVOKESPECIAL, Type.getInternalName(parentType), "<init>", "()V", false);
 
             for (Property property : properties) {
-                if (hasImplementation(parentType, property.getAccessor())) {
+                if (hasImplementation(parentType, property.getAccessor()) || !property.isLeastSpecificType()) {
                     continue;
                 }
 
@@ -342,7 +345,10 @@ class ClassGenerator {
                 MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, accessor.getName(), Type.getMethodDescriptor(accessor), null, null);
                 mv.visitCode();
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, internalName, property.getName(), Type.getDescriptor(property.getType()));
+                mv.visitFieldInsn(GETFIELD, internalName, property.getName(), Type.getDescriptor(property.getLeastSpecificType()));
+                if (!property.isLeastSpecificType()) {
+                    mv.visitTypeInsn(CHECKCAST, Type.getInternalName(property.getLeastSpecificType()));
+                }
                 mv.visitInsn(getReturnOpcode(property.getType()));
                 mv.visitMaxs(0, 0);
                 mv.visitEnd();
@@ -356,6 +362,9 @@ class ClassGenerator {
                 mv.visitCode();
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(getLoadOpcode(property.getType()), 1);
+                if (property.getAccessor().getReturnType().equals(Optional.class)) {
+                    mv.visitMethodInsn(INVOKESTATIC, "com/google/common/base/Optional", "fromNullable", "(Ljava/lang/Object;)Lcom/google/common/base/Optional;", false);
+                }
                 mv.visitFieldInsn(PUTFIELD, internalName, property.getName(), Type.getDescriptor(property.getType()));
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(0, 0);

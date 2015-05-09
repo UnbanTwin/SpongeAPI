@@ -27,6 +27,8 @@ package org.spongepowered.api.event;
 import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
+import org.spongepowered.api.Game;
+import org.spongepowered.api.event.entity.player.PlayerBreakBlockEvent;
 import org.spongepowered.api.util.event.factory.EventFactory;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.extent.Extent;
@@ -34,11 +36,16 @@ import org.spongepowered.api.world.extent.Extent;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SpongeEventFactoryTest {
 
     @Test
     public void testCreate() throws InvocationTargetException, IllegalAccessException {
+
+        Object event;
+        List<Method> badMethods = new ArrayList<Method>();
         for (Method method : SpongeEventFactory.class.getMethods()) {
             if (method.getName().startsWith("createState")) {
                 continue; // TODO minecrell needs to make this possible.
@@ -51,7 +58,23 @@ public class SpongeEventFactoryTest {
                         params[i] = mockParam(paramTypes[i]);
                     }
 
-                    method.invoke(null, params);
+                    event = method.invoke(null, params);
+                    Method eventMethod2 = null;
+                    try {
+                        for (Method eventMethod : method.getReturnType().getMethods()) {
+                            eventMethod2 = eventMethod;
+                            paramTypes = eventMethod.getParameterTypes();
+                            params = new Object[paramTypes.length];
+                            for (int i = 0; i < paramTypes.length; i++) {
+                                params[i] = mockParam(paramTypes[i]);
+                            }
+
+                            eventMethod.invoke(event, params);
+
+                        }
+                    } catch (Exception e) {
+                        badMethods.add(eventMethod2);
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException(
                             "Runtime creation of the '" + method.getReturnType().getName() + "' event failed\n\n"
@@ -77,6 +100,11 @@ public class SpongeEventFactoryTest {
                                     + " is the supertype of all generated event classes).\n", e);
                 }
             }
+        }
+        System.out.println("Bad methods: ");
+        for (Method method: badMethods) {
+            System.out.println(method.getName() +" " + method.getDeclaringClass());
+            System.out.println();
         }
     }
 
